@@ -1,6 +1,6 @@
 // +build postgresql
 
-package certdb
+package cloudflare
 
 import (
 	"testing"

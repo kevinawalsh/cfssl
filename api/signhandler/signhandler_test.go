@@ -10,6 +10,7 @@ import (
 
 	"github.com/cloudflare/cfssl/api"
 	"github.com/cloudflare/cfssl/certdb"
+	"github.com/cloudflare/cfssl/certdb/cloudflare"
 	"github.com/cloudflare/cfssl/certdb/testdb"
 	"github.com/cloudflare/cfssl/config"
 	"github.com/cloudflare/cfssl/signer"
@@ -52,6 +53,7 @@ func TestSignerDBPersistence(t *testing.T) {
 	}
 
 	s.SetDB(db)
+	s.SetDBAccessor(cloudflare.StdCertDB)
 
 	var handler *api.HTTPHandler
 	handler, err = NewHandlerFromSigner(signer.Signer(s))
@@ -99,12 +101,12 @@ func TestSignerDBPersistence(t *testing.T) {
 	}
 
 	var crs []*certdb.CertificateRecord
-	crs, err = certdb.GetUnexpiredCertificates(db)
+	crs, err = cloudflare.StdCertDB.GetUnexpiredCertificates(db)
 	if err != nil {
 		t.Fatal("Failed to get unexpired certificates")
 	}
 
 	if len(crs) != 1 {
-		t.Fatal("Expected 1 unexpired certificate in the database after signing 1")
+		t.Fatal("Expected 1 unexpired certificate in the database after signing 1: len(crs)=", len(crs))
 	}
 }

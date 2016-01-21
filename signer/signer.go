@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cloudflare/cfssl/certdb"
 	"github.com/cloudflare/cfssl/config"
 	"github.com/cloudflare/cfssl/csr"
 	cferr "github.com/cloudflare/cfssl/errors"
@@ -96,6 +97,7 @@ type Signer interface {
 	Info(info.Req) (*info.Resp, error)
 	Policy() *config.Signing
 	SetDB(*sql.DB)
+	SetDBAccessor(certdb.DBAccessor)
 	SetPolicy(*config.Signing)
 	SigAlgo() x509.SignatureAlgorithm
 	Sign(req SignRequest) (cert []byte, err error)

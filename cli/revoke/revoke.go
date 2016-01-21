@@ -5,7 +5,8 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/cloudflare/cfssl/certdb"
+	"github.com/cloudflare/cfssl/certdb/cloudflare"
+	"github.com/cloudflare/cfssl/certdb/dbconf"
 	"github.com/cloudflare/cfssl/cli"
 	"github.com/cloudflare/cfssl/log"
 	"github.com/cloudflare/cfssl/ocsp"
@@ -39,7 +40,7 @@ func revokeMain(args []string, c cli.Config) (err error) {
 	}
 
 	var db *sql.DB
-	db, err = certdb.DBFromConfig(c.DBConfigFile)
+	db, err = dbconf.DBFromConfig(c.DBConfigFile)
 	if err != nil {
 		return err
 	}
@@ -51,7 +52,7 @@ func revokeMain(args []string, c cli.Config) (err error) {
 		return
 	}
 
-	err = certdb.RevokeCertificate(db, c.Serial, reasonCode)
+	err = cloudflare.StdCertDB.RevokeCertificate(db, c.Serial, reasonCode)
 
 	return
 }

@@ -12,6 +12,7 @@ import (
 
 	"github.com/cloudflare/cfssl/api"
 	"github.com/cloudflare/cfssl/certdb"
+	"github.com/cloudflare/cfssl/certdb/cloudflare"
 	"github.com/cloudflare/cfssl/certdb/testdb"
 )
 
@@ -24,7 +25,7 @@ func prepDB() (db *sql.DB, err error) {
 		PEM:    "unexpired cert",
 	}
 
-	err = certdb.InsertCertificate(db, cert)
+	err = cloudflare.StdCertDB.InsertCertificate(db, cert)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +91,7 @@ func TestRevocation(t *testing.T) {
 		t.Fatalf("failed to read response body: %v", err)
 	}
 
-	cert, err := certdb.GetCertificate(db, "1")
+	cert, err := cloudflare.StdCertDB.GetCertificate(db, "1")
 	if err != nil {
 		t.Fatal("failed to get certificate ", err)
 	}

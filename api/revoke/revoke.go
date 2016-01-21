@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/cloudflare/cfssl/api"
-	"github.com/cloudflare/cfssl/certdb"
+	"github.com/cloudflare/cfssl/certdb/cloudflare"
 	"github.com/cloudflare/cfssl/errors"
 	"github.com/cloudflare/cfssl/ocsp"
 )
@@ -61,7 +61,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) error {
 		return errors.NewBadRequestString("Invalid reason code")
 	}
 
-	err = certdb.RevokeCertificate(h.db, req.Serial, reasonCode)
+	err = cloudflare.StdCertDB.RevokeCertificate(h.db, req.Serial, reasonCode)
 	result := map[string]string{}
 	return api.SendResponse(w, result)
 }

@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/cloudflare/cfssl/certdb"
+	"github.com/cloudflare/cfssl/certdb/cloudflare"
+	"github.com/cloudflare/cfssl/certdb/dbconf"
 	"github.com/cloudflare/cfssl/cli"
 	"github.com/cloudflare/cfssl/helpers"
 	"github.com/cloudflare/cfssl/log"
@@ -54,13 +56,13 @@ func ocsprefreshMain(args []string, c cli.Config) (err error) {
 	}
 
 	var db *sql.DB
-	db, err = certdb.DBFromConfig(c.DBConfigFile)
+	db, err = dbconf.DBFromConfig(c.DBConfigFile)
 	if err != nil {
 		return err
 	}
 
 	var certs []*certdb.CertificateRecord
-	certs, err = certdb.GetUnexpiredCertificates(db)
+	certs, err = cloudflare.StdCertDB.GetUnexpiredCertificates(db)
 	if err != nil {
 		return err
 	}
@@ -90,7 +92,7 @@ func ocsprefreshMain(args []string, c cli.Config) (err error) {
 			return err
 		}
 
-		err = certdb.UpsertOCSP(db, cert.SerialNumber.String(), string(resp), ocspExpiry)
+		err = cloudflare.StdCertDB.UpsertOCSP(db, cert.SerialNumber.String(), string(resp), ocspExpiry)
 		if err != nil {
 			log.Critical("Unable to save OCSP response: ", err)
 			return err

@@ -23,7 +23,7 @@ import (
 	"github.com/cloudflare/cfssl/api/scan"
 	"github.com/cloudflare/cfssl/api/signhandler"
 	"github.com/cloudflare/cfssl/bundler"
-	"github.com/cloudflare/cfssl/certdb"
+	"github.com/cloudflare/cfssl/certdb/dbconf"
 	"github.com/cloudflare/cfssl/cli"
 	ocspsign "github.com/cloudflare/cfssl/cli/ocspsign"
 	"github.com/cloudflare/cfssl/cli/sign"
@@ -219,7 +219,7 @@ func serverMain(args []string, c cli.Config) error {
 	}
 
 	if c.DBConfigFile != "" {
-		db, err = certdb.DBFromConfig(c.DBConfigFile)
+		db, err = dbconf.DBFromConfig(c.DBConfigFile)
 		if err != nil {
 			return err
 		}

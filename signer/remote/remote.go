@@ -7,6 +7,7 @@ import (
 	"errors"
 
 	"github.com/cloudflare/cfssl/api/client"
+	"github.com/cloudflare/cfssl/certdb"
 	"github.com/cloudflare/cfssl/config"
 	cferr "github.com/cloudflare/cfssl/errors"
 	"github.com/cloudflare/cfssl/info"
@@ -109,6 +110,11 @@ func (s *Signer) SetPolicy(policy *config.Signing) {
 
 // SetDB sets the signer's cert db
 func (s *Signer) SetDB(db *sql.DB) {
+	// noop
+}
+
+// SetDBAccessor sets the signers' cert db accessor
+func (s *Signer) SetDBAccessor(dba certdb.DBAccessor) {
 	// noop
 }
 

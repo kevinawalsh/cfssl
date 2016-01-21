@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"database/sql"
 
+	"github.com/cloudflare/cfssl/certdb"
 	"github.com/cloudflare/cfssl/config"
 	cferr "github.com/cloudflare/cfssl/errors"
 	"github.com/cloudflare/cfssl/info"
@@ -215,6 +216,12 @@ func (s *Signer) Info(req info.Req) (resp *info.Resp, err error) {
 func (s *Signer) SetDB(db *sql.DB) {
 	s.local.SetDB(db)
 	s.remote.SetDB(db)
+}
+
+// SetDBAccessor sets the signer's cert db accessor.
+func (s *Signer) SetDBAccessor(dba certdb.DBAccessor) {
+	s.local.SetDBAccessor(dba)
+	s.remote.SetDBAccessor(dba)
 }
 
 // SigAlgo returns the RSA signer's signature algorithm.

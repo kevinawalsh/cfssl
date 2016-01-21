@@ -7,6 +7,8 @@ import (
 	"fmt"
 
 	"github.com/cloudflare/cfssl/certdb"
+	"github.com/cloudflare/cfssl/certdb/cloudflare"
+	"github.com/cloudflare/cfssl/certdb/dbconf"
 	"github.com/cloudflare/cfssl/cli"
 	"github.com/cloudflare/cfssl/log"
 )
@@ -32,13 +34,13 @@ func ocspdumpMain(args []string, c cli.Config) (err error) {
 	}
 
 	var db *sql.DB
-	db, err = certdb.DBFromConfig(c.DBConfigFile)
+	db, err = dbconf.DBFromConfig(c.DBConfigFile)
 	if err != nil {
 		return err
 	}
 
 	var records []*certdb.OCSPRecord
-	records, err = certdb.GetUnexpiredOCSPs(db)
+	records, err = cloudflare.StdCertDB.GetUnexpiredOCSPs(db)
 	if err != nil {
 		return err
 	}

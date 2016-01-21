@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cloudflare/cfssl/certdb"
+	"github.com/cloudflare/cfssl/certdb/cloudflare"
 	"github.com/cloudflare/cfssl/certdb/testdb"
 	"github.com/cloudflare/cfssl/cli"
 	"golang.org/x/crypto/ocsp"
@@ -21,7 +22,7 @@ func prepDB() (db *sql.DB, err error) {
 		PEM:    "unexpired cert",
 	}
 
-	err = certdb.InsertCertificate(db, cert)
+	err = cloudflare.StdCertDB.InsertCertificate(db, cert)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +42,7 @@ func TestRevokeMain(t *testing.T) {
 	}
 
 	var crs *certdb.CertificateRecord
-	crs, err = certdb.GetCertificate(db, "1")
+	crs, err = cloudflare.StdCertDB.GetCertificate(db, "1")
 	if err != nil {
 		t.Fatal("Failed to get certificate")
 	}
@@ -55,7 +56,7 @@ func TestRevokeMain(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	crs, err = certdb.GetCertificate(db, "1")
+	crs, err = cloudflare.StdCertDB.GetCertificate(db, "1")
 	if err != nil {
 		t.Fatal("Failed to get certificate")
 	}
@@ -69,7 +70,7 @@ func TestRevokeMain(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	crs, err = certdb.GetCertificate(db, "1")
+	crs, err = cloudflare.StdCertDB.GetCertificate(db, "1")
 	if err != nil {
 		t.Fatal("Failed to get certificate")
 	}

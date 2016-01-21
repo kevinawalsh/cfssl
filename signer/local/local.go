@@ -14,11 +14,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"math/big"
-	"net"
-	"net/mail"
 	"github.com/cloudflare/cfssl/certdb"
 	"github.com/cloudflare/cfssl/config"
 	cferr "github.com/cloudflare/cfssl/errors"
@@ -28,16 +23,22 @@ import (
 	"github.com/cloudflare/cfssl/signer"
 	"github.com/google/certificate-transparency/go"
 	"github.com/google/certificate-transparency/go/client"
+	"io"
+	"io/ioutil"
+	"math/big"
+	"net"
+	"net/mail"
 )
 
 // Signer contains a signer that uses the standard library to
 // support both ECDSA and RSA CA keys.
 type Signer struct {
-	ca      *x509.Certificate
-	priv    crypto.Signer
-	policy  *config.Signing
-	sigAlgo x509.SignatureAlgorithm
-	db      *sql.DB
+	ca         *x509.Certificate
+	priv       crypto.Signer
+	policy     *config.Signing
+	sigAlgo    x509.SignatureAlgorithm
+	db         *sql.DB
+	dbAccessor certdb.DBAccessor
 }
 
 // NewSigner creates a new Signer directly from a
@@ -344,16 +345,16 @@ func (s *Signer) Sign(req signer.SignRequest) (cert []byte, err error) {
 		return nil, err
 	}
 
-	if s.db != nil {
+	if s.db != nil && s.dbAccessor != nil {
 		var certRecord = &certdb.CertificateRecord{
-			Serial:    certTBS.SerialNumber.String(),
-			CALabel:   req.Label,
-			Status:    "good",
-			Expiry:    certTBS.NotAfter,
-			PEM:       string(signedCert),
+			Serial:  certTBS.SerialNumber.String(),
+			CALabel: req.Label,
+			Status:  "good",
+			Expiry:  certTBS.NotAfter,
+			PEM:     string(signedCert),
 		}
 
-		err = certdb.InsertCertificate(s.db, certRecord)
+		err = s.dbAccessor.InsertCertificate(s.db, certRecord)
 		if err != nil {
 			return nil, err
 		}
@@ -420,6 +421,11 @@ func (s *Signer) SetPolicy(policy *config.Signing) {
 // SetDB sets the signer's cert db
 func (s *Signer) SetDB(db *sql.DB) {
 	s.db = db
+}
+
+// SetDBAccessor sets the signers' cert db accessor
+func (s *Signer) SetDBAccessor(dba certdb.DBAccessor) {
+	s.dbAccessor = dba
 }
 
 // Policy returns the signer's policy.
