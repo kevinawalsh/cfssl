@@ -13,56 +13,59 @@ import (
 
 // Config is a type to hold flag values used by cfssl commands.
 type Config struct {
-	Hostname          string
-	CertFile          string
-	CSRFile           string
-	CAFile            string
-	CAKeyFile         string
-	TLSCertFile       string
-	TLSKeyFile        string
-	KeyFile           string
-	IntermediatesFile string
-	CABundleFile      string
-	IntBundleFile     string
-	Address           string
-	Port              int
-	Password          string
-	ConfigFile        string
-	CFG               *config.Config
-	Profile           string
-	IsCA              bool
-	RenewCA           bool
-	IntDir            string
-	Flavor            string
-	Metadata          string
-	Domain            string
-	IP                string
-	Remote            string
-	Label             string
-	AuthKey           string
-	Module            string
-	Token             string
-	PIN               string
-	PKCS11Label       string
-	ResponderFile     string
-	ResponderKeyFile  string
-	Status            string
-	Reason            string
-	RevokedAt         string
-	Interval          time.Duration
-	List              bool
-	Family            string
-	Timeout           time.Duration
-	Scanner           string
-	CSVFile           string
-	NumWorkers        int
-	MaxHosts          int
-	Responses         string
-	Path              string
-	Usage             string
-	PGPPrivate        string
-	Serial            string
-	DBConfigFile      string
+	Hostname                     string
+	CertFile                     string
+	CSRFile                      string
+	CAFile                       string
+	CAKeyFile                    string
+	TLSCertFile                  string
+	TLSKeyFile                   string
+	TrustAnchorFile              string
+	RequireClientTLSCertificates bool
+	KeyFile                      string
+	IntermediatesFile            string
+	CABundleFile                 string
+	IntBundleFile                string
+	Stats                        string
+	Address                      string
+	Port                         int
+	Password                     string
+	ConfigFile                   string
+	CFG                          *config.Config
+	Profile                      string
+	IsCA                         bool
+	RenewCA                      bool
+	IntDir                       string
+	Flavor                       string
+	Metadata                     string
+	Domain                       string
+	IP                           string
+	Remote                       string
+	Label                        string
+	AuthKey                      string
+	Module                       string
+	Token                        string
+	PIN                          string
+	PKCS11Label                  string
+	ResponderFile                string
+	ResponderKeyFile             string
+	Status                       string
+	Reason                       string
+	RevokedAt                    string
+	Interval                     time.Duration
+	List                         bool
+	Family                       string
+	Timeout                      time.Duration
+	Scanner                      string
+	CSVFile                      string
+	NumWorkers                   int
+	MaxHosts                     int
+	Responses                    string
+	Path                         string
+	Usage                        string
+	PGPPrivate                   string
+	Serial                       string
+	DBConfigFile                 string
 }
 
 // registerFlags defines all cfssl command flags and associates their values with variables.
@@ -74,10 +77,13 @@ func registerFlags(c *Config, f *flag.FlagSet) {
 	f.StringVar(&c.CAKeyFile, "ca-key", "", "CA private key")
 	f.StringVar(&c.TLSCertFile, "tls-cert", "", "Other endpoint CA to set up TLS protocol")
 	f.StringVar(&c.TLSKeyFile, "tls-key", "", "Other endpoint CA private key")
+	f.StringVar(&c.TrustAnchorFile, "trust-anchors", "", "Trust anchors for client TLS verification")
+	f.BoolVar(&c.RequireClientTLSCertificates, "client-auth", false, "Require client TLS verification")
 	f.StringVar(&c.KeyFile, "key", "", "private key for the certificate")
 	f.StringVar(&c.IntermediatesFile, "intermediates", "", "intermediate certs")
 	f.StringVar(&c.CABundleFile, "ca-bundle", "", "path to root certificate store")
 	f.StringVar(&c.IntBundleFile, "int-bundle", "", "path to intermediate certificate store")
+	f.StringVar(&c.Stats, "stats", "", "period for statistics printing")
 	f.StringVar(&c.Address, "address", "127.0.0.1", "Address to bind")
 	f.IntVar(&c.Port, "port", 8888, "Port to bind")
 	f.StringVar(&c.ConfigFile, "config", "", "path to configuration file")

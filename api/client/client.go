@@ -3,15 +3,19 @@ package client
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	stderr "errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/cloudflare/cfssl/api"
@@ -75,10 +79,85 @@ func (srv *server) getURL(endpoint string) string {
 	return fmt.Sprintf("%s/api/v1/cfssl/%s", srv.URL, endpoint)
 }
 
+var once sync.Once
+var tlsClient *http.Client
+
+var SkipServerVerification = false
+var TrustAnchorFile string   // e.g. "/etc/cfssl_ca.pem"
+var TLSClientKeyFile string  // e.g. "/etc/cfssl_cli-key.pem"
+var TLSClientCertFile string // e.g. "/etc/cfssl_cli.pem"
+var ReuseAPIConnections = true
+
+func http_Post(url string, bodyType string, body io.Reader) (resp *http.Response, err error) {
+	once.Do(func() {
+		skip := SkipServerVerification
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: skip,
+			},
+			DisableKeepAlives: !ReuseAPIConnections,
+		}
+		fmt.Printf("Server connection:\n")
+		fmt.Printf("  url: %s\n", url)
+		fmt.Printf("  keepalive? %v\n", ReuseAPIConnections)
+		fmt.Printf("  verify server tls certificate? %v\n", !skip)
+		if TrustAnchorFile != "" {
+			fmt.Printf("  tls trust anchors: %s\n", TrustAnchorFile)
+			pem, err := ioutil.ReadFile(TrustAnchorFile)
+			if err != nil {
+				fmt.Printf("Failed to load: %s\n", TrustAnchorFile)
+				return
+			}
+			pool := x509.NewCertPool()
+			if !pool.AppendCertsFromPEM(pem) {
+				fmt.Printf("Failed to install: %s\n", TrustAnchorFile)
+				return
+			}
+			tr.TLSClientConfig.RootCAs = pool
+		} else {
+			fmt.Printf("  tls trust anchors: <from system>\n")
+		}
+		cliauth := (TLSClientKeyFile != "" || TLSClientCertFile != "")
+		fmt.Printf("  tls client authentication? %v\n", cliauth)
+		if cliauth {
+			if TLSClientKeyFile == "" || TLSClientCertFile == "" {
+				fmt.Printf("Must have both TLSClientKeyFile and TLSClientCertFile\n")
+				return
+			}
+			k, err := ioutil.ReadFile(TLSClientKeyFile)
+			if err != nil {
+				fmt.Printf("Failed to load: %s\n", TLSClientKeyFile)
+				return
+			}
+
+			c, err := ioutil.ReadFile(TLSClientCertFile)
+			if err != nil {
+				fmt.Printf("Failed to load: %s\n", TLSClientCertFile)
+				return
+			}
+			tlsKeyPair, err := tls.X509KeyPair(c, k)
+			if err != nil {
+				fmt.Printf("Failed to parse: %s, %s\n", TLSClientKeyFile, TLSClientCertFile)
+				return
+			}
+			tr.TLSClientConfig.Certificates = append(tr.TLSClientConfig.Certificates, tlsKeyPair)
+			fmt.Printf("  tls client key: %s\n", TLSClientKeyFile)
+			fmt.Printf("  tls client cert: %s\n", TLSClientCertFile)
+		}
+		tlsClient = &http.Client{Transport: tr}
+	})
+
+	if tlsClient == nil {
+		return nil, errors.Wrap(errors.APIClientError, errors.ClientHTTPError, stderr.New("bad tls client"))
+	}
+
+	return tlsClient.Post(url, bodyType, body)
+}
+
 // post connects to the remote server and returns a Response struct
 func (srv *server) post(url string, jsonData []byte) (*api.Response, error) {
 	buf := bytes.NewBuffer(jsonData)
-	resp, err := http.Post(url, "application/json", buf)
+	resp, err := http_Post(url, "application/json", buf)
 	if err != nil {
 		return nil, errors.Wrap(errors.APIClientError, errors.ClientHTTPError, err)
 	}
